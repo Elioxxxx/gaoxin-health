@@ -1,0 +1,810 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  RESIDENT
+  DOCTOR
+  ADMIN
+}
+
+enum InstitutionType {
+  TERTIARY_HOSPITAL
+  COMMUNITY_HEALTH_CENTER
+}
+
+enum TriageLevel {
+  P0
+  P1
+  P2
+  P3
+  P4
+}
+
+enum SessionStatus {
+  DRAFT
+  ASKING
+  TRIAGED
+  RECOMMENDED
+  GUIDED
+  CLOSED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  DOCTOR
+}
+
+enum AgentRunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum IntentType {
+  ACUTE_CARE_INTENT
+  SPECIALTY_CARE_INTENT
+  CHRONIC_DISEASE_MANAGEMENT
+  REPORT_INTERPRETATION
+  FAMILY_DOCTOR_SIGNUP
+  CHILD_HEALTH
+  MATERNAL_HEALTH
+  ELDERLY_HEALTH
+  HEALTH_ANXIETY
+  SERVICE_DROPOFF
+  MEDICATION_SAFETY
+  PUBLIC_HEALTH_FOLLOWUP
+}
+
+enum LeadReceiverType {
+  HOSPITAL
+  COMMUNITY_HEALTH_CENTER
+  HEALTH_COMMISSION
+}
+
+enum LeadType {
+  SPECIALTY_VISIT
+  CHRONIC_FOLLOWUP
+  REPORT_REVIEW
+  FAMILY_DOCTOR
+  CHILD_CARE
+  MATERNAL_CARE
+  ELDERLY_CARE
+  MEDICATION_SAFETY
+  PUBLIC_HEALTH
+  HEALTH_EDUCATION
+}
+
+enum LeadStatus {
+  PENDING
+  VIEWED
+  CONTACTED
+  FOLLOWUP_ADDED
+  TRANSFERRED
+  CLOSED
+  IGNORED
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum UserActionEventType {
+  PAGE_VIEW
+  SEARCH
+  AI_CHAT
+  REPORT_VIEW
+  REPORT_INTERPRET
+  RESOURCE_VIEW
+  DOCTOR_VIEW
+  GUIDE_GENERATED
+  GUIDE_ABANDONED
+  APPOINTMENT_CLICK
+  APPOINTMENT_ABANDONED
+  HEALTH_TASK_VIEW
+  HEALTH_TASK_DONE
+  FAMILY_DOCTOR_VIEW
+  HEALTH_RECORD_VIEW
+}
+
+enum RiskFocusCategory {
+  ACUTE_RISK
+  CHRONIC_CONTROL
+  MEDICATION_SAFETY
+  SPECIAL_POPULATION
+  LAB_TREND
+  MAJOR_HISTORY
+  LIFESTYLE_RISK
+  CARE_BEHAVIOR
+  PUBLIC_HEALTH_FOLLOWUP
+  DATA_QUALITY
+}
+
+model User {
+  id              String           @id @default(cuid())
+  role            Role
+  displayName     String
+  phone           String?          @unique
+  residentProfile ResidentProfile?
+  doctorProfile   DoctorProfile?
+  adminProfile    AdminProfile?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model ResidentProfile {
+  id               String              @id @default(cuid())
+  userId           String              @unique
+  name             String
+  gender           String
+  age              Int
+  phone            String
+  address          String
+  community        String
+  familyDoctorName String?
+  caseKey          String?
+  caseSummary      String?
+  primaryScenario  String?
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthTags       HealthTag[]
+  medicalRecords   MedicalRecord[]
+  diagnoses        Diagnosis[]
+  medications      Medication[]
+  labResults       LabResult[]
+  allergies        Allergy[]
+  healthSummaries  HealthSummary[]
+  healthTasks      HealthTask[]
+  sessions         PreConsultSession[]
+  doctorProfiles   DoctorHealthProfile[]
+  userActionEvents UserActionEvent[]
+  intentInsights   IntentInsight[]
+  serviceLeads     ServiceLead[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([name])
+  @@index([community])
+  @@index([caseKey])
+}
+
+model DoctorProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  doctorId  String?  @unique
+  name      String
+  title     String
+  phone     String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctor    Doctor?  @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  title     String
+  bureau    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HealthTag {
+  id         String          @id @default(cuid())
+  residentId String
+  name       String
+  category   String
+  color      String?
+  resident   ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@index([residentId])
+}
+
+model MedicalRecord {
+  id              String          @id @default(cuid())
+  residentId      String
+  institutionName String
+  departmentName  String
+  visitDate       DateTime
+  chiefComplaint  String
+  diagnosisText   String
+  treatmentText   String
+  sourceType      String
+  resident        ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  diagnoses       Diagnosis[]
+  medications     Medication[]
+  labResults      LabResult[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([residentId, visitDate])
+}
+
+model Diagnosis {
+  id          String          @id @default(cuid())
+  residentId  String
+  recordId    String?
+  name        String
+  code        String?
+  diagnosedAt DateTime
+  status      String
+  notes       String?
+  resident    ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  record      MedicalRecord?  @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+
+  @@index([residentId])
+  @@index([recordId])
+}
+
+model Medication {
+  id         String          @id @default(cuid())
+  residentId String
+  recordId   String?
+  name       String
+  dosage     String
+  frequency  String
+  startDate  DateTime?
+  endDate    DateTime?
+  notes      String?
+  resident   ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  record     MedicalRecord?  @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  createdAt  DateTime        @default(now())
+
+  @@index([residentId])
+  @@index([recordId])
+}
+
+model LabResult {
+  id             String          @id @default(cuid())
+  residentId     String
+  recordId       String?
+  itemName       String
+  value          String
+  unit           String?
+  referenceRange String?
+  abnormalFlag   String?
+  resultDate     DateTime
+  resident       ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  record         MedicalRecord?  @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now())
+
+  @@index([residentId])
+  @@index([recordId])
+}
+
+model Allergy {
+  id         String          @id @default(cuid())
+  residentId String
+  allergen   String
+  reaction   String
+  severity   String
+  notes      String?
+  resident   ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
+
+  @@index([residentId])
+}
+
+model HealthSummary {
+  id          String          @id @default(cuid())
+  residentId  String
+  title       String
+  summaryText String
+  summaryJson String
+  source      String
+  version     String
+  resident    ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([residentId])
+}
+
+model HealthTask {
+  id          String          @id @default(cuid())
+  residentId  String
+  title       String
+  type        String
+  status      String
+  dueDate     DateTime?
+  description String?
+  resident    ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([residentId, status])
+}
+
+model Institution {
+  id                  String              @id @default(cuid())
+  name                String              @unique
+  type                InstitutionType
+  level               String
+  address             String
+  description         String
+  capabilities        String
+  departments         Department[]
+  doctors             Doctor[]
+  serviceCapabilities ServiceCapability[]
+  recommendations     Recommendation[]
+  receivedServiceLeads ServiceLead[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([type])
+}
+
+model Department {
+  id              String              @id @default(cuid())
+  institutionId   String
+  name            String
+  description     String
+  symptomKeywords String
+  diseaseKeywords String
+  institution     Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  doctors         Doctor[]
+  capabilities    ServiceCapability[]
+  recommendations Recommendation[]
+  receivedServiceLeads ServiceLead[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([institutionId, name])
+  @@index([name])
+}
+
+model Doctor {
+  id             String           @id @default(cuid())
+  institutionId  String
+  departmentId   String
+  name           String
+  title          String
+  specialties    String
+  isExpert       Boolean          @default(false)
+  introduction   String
+  institution    Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  department     Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  expertPool     ExpertPool?
+  profile        DoctorProfile?
+  recommendations Recommendation[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([institutionId])
+  @@index([departmentId])
+  @@index([isExpert])
+}
+
+model ExpertPool {
+  id            String   @id @default(cuid())
+  doctorId      String   @unique
+  poolName      String
+  specialtyArea String
+  tags          String
+  priority      Int
+  doctor        Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ServiceCapability {
+  id            String       @id @default(cuid())
+  institutionId String
+  departmentId  String?
+  name          String
+  category      String
+  description   String
+  keywords      String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  department    Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([institutionId])
+  @@index([departmentId])
+}
+
+model PreConsultSession {
+  id           String              @id @default(cuid())
+  residentId   String
+  status       SessionStatus
+  initialInput String
+  scenarioKey  String
+  resident     ResidentProfile     @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  messages     PreConsultMessage[]
+  report       PreConsultReport?
+  triageResult TriageResult?
+  recommendations Recommendation[]
+  guidePlans   GuidePlan[]
+  agentRuns    AgentRun[]
+  feedback     AgentFeedback[]
+  qualityIssues QualityIssue[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([residentId])
+  @@index([status])
+  @@index([scenarioKey])
+}
+
+model PreConsultMessage {
+  id             String            @id @default(cuid())
+  sessionId      String
+  role           MessageRole
+  content        String
+  structuredJson String?
+  session        PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime          @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
+model PreConsultReport {
+  id                String            @id @default(cuid())
+  sessionId         String            @unique
+  chiefComplaint    String
+  presentIllness    String
+  pastHistory       String
+  medicationHistory String
+  allergyHistory    String
+  riskFlags         String
+  patientExplanation String
+  doctorSummary     String
+  structuredJson    String
+  session           PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model TriageResult {
+  id                  String            @id @default(cuid())
+  sessionId           String            @unique
+  level               TriageLevel
+  suggestedDepartment String
+  suggestedCareType   String
+  reasons             String
+  confidence          Float
+  session             PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([level])
+}
+
+model Recommendation {
+  id            String            @id @default(cuid())
+  sessionId     String
+  institutionId String
+  departmentId  String
+  doctorId      String?
+  rank          Int
+  score         Float
+  reasons       String
+  session       PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  institution   Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  department    Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  doctor        Doctor?           @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  guidePlans    GuidePlan[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([sessionId, rank])
+  @@index([institutionId])
+  @@index([departmentId])
+}
+
+model GuidePlan {
+  id               String            @id @default(cuid())
+  sessionId        String
+  recommendationId String?
+  title            String
+  steps            String
+  preparationItems String
+  navigationText   String
+  session          PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  recommendation   Recommendation?   @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  createdAt        DateTime          @default(now())
+
+  @@index([sessionId])
+  @@index([recommendationId])
+}
+
+model TriageRule {
+  id                  String      @id @default(cuid())
+  name                String
+  priority            Int
+  enabled             Boolean     @default(true)
+  symptomKeywords     String
+  riskFactors         String
+  triageLevel         TriageLevel
+  suggestedDepartment String
+  suggestedCareType   String
+  explanation         String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([enabled, priority])
+}
+
+model DepartmentMappingRule {
+  id              String   @id @default(cuid())
+  name            String
+  symptomKeywords String
+  diseaseKeywords String
+  departmentName  String
+  careType        String
+  priority        Int
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model MatchingRule {
+  id          String   @id @default(cuid())
+  name        String
+  targetType  String
+  conditions  String
+  weights     String
+  description String
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model KnowledgeDocument {
+  id          String           @id @default(cuid())
+  title       String
+  category    String
+  source      String
+  content     String
+  tags        String
+  chunks      KnowledgeChunk[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  chunkIndex Int
+  content    String
+  keywords   String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+
+  @@unique([documentId, chunkIndex])
+}
+
+model PromptTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  agentName   String
+  version     String
+  template    String
+  variables   String
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ModelVersion {
+  id           String   @id @default(cuid())
+  provider     String
+  modelName    String
+  version      String
+  configJson   String
+  isActive     Boolean  @default(false)
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AgentRun {
+  id        String            @id @default(cuid())
+  sessionId String?
+  agentName String
+  inputJson String
+  outputJson String
+  status    AgentRunStatus
+  latencyMs Int
+  session   PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  steps     AgentStep[]
+  feedback  AgentFeedback[]
+  createdAt DateTime          @default(now())
+
+  @@index([sessionId])
+  @@index([agentName])
+  @@index([status])
+}
+
+model AgentStep {
+  id        String   @id @default(cuid())
+  runId     String
+  stepName  String
+  inputJson String
+  outputJson String
+  status    AgentRunStatus
+  latencyMs Int
+  run       AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([runId])
+}
+
+model AgentFeedback {
+  id        String             @id @default(cuid())
+  runId     String?
+  sessionId String?
+  rating    Int
+  comment   String
+  source    String
+  run       AgentRun?          @relation(fields: [runId], references: [id], onDelete: SetNull)
+  session   PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  issues    QualityIssue[]
+  createdAt DateTime           @default(now())
+
+  @@index([runId])
+  @@index([sessionId])
+}
+
+model QualityIssue {
+  id          String             @id @default(cuid())
+  sessionId   String?
+  feedbackId  String?
+  title       String
+  description String
+  severity    String
+  status      String
+  session     PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  feedback    AgentFeedback?     @relation(fields: [feedbackId], references: [id], onDelete: SetNull)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+}
+
+model DoctorHealthProfile {
+  id                              String          @id @default(cuid())
+  residentId                      String
+  generatedAt                     DateTime        @default(now())
+  summaryTitle                    String
+  onePageSummary                  String
+  majorProblemsJson               String
+  currentVisitRelevanceJson       String
+  riskFocusItemsJson              String
+  medicationSafetyJson            String
+  allergyAndContraindicationsJson String
+  labTrendHighlightsJson          String
+  imagingHighlightsJson           String
+  chronicDiseaseStatusJson        String
+  lifestyleFactorsJson            String
+  publicHealthFollowUpJson        String
+  dataQualityNotesJson            String
+  sourceRecordsJson               String
+  doctorChecklistJson             String
+  resident                        ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  riskFocusItems                  RiskFocusItem[]
+  createdAt                       DateTime        @default(now())
+  updatedAt                       DateTime        @updatedAt
+
+  @@index([residentId])
+  @@index([generatedAt])
+}
+
+model RiskFocusItem {
+  id                    String              @id @default(cuid())
+  doctorHealthProfileId String
+  category              RiskFocusCategory
+  title                 String
+  summary               String
+  evidenceJson          String
+  suggestedDoctorAction String
+  priority              LeadPriority
+  profile               DoctorHealthProfile @relation(fields: [doctorHealthProfileId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+
+  @@index([doctorHealthProfileId])
+  @@index([category])
+  @@index([priority])
+}
+
+model UserActionEvent {
+  id           String              @id @default(cuid())
+  residentId   String
+  eventType    UserActionEventType
+  eventName    String
+  pagePath     String
+  content      String?
+  targetType   String?
+  targetId     String?
+  metadataJson String
+  occurredAt   DateTime
+  resident     ResidentProfile     @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+
+  @@index([residentId, occurredAt])
+  @@index([eventType])
+  @@index([targetType, targetId])
+}
+
+model IntentInsight {
+  id                    String           @id @default(cuid())
+  residentId            String
+  intentType            IntentType
+  title                 String
+  summary               String
+  confidence            Float
+  evidenceEventsJson    String
+  suggestedReceiverType LeadReceiverType
+  suggestedAction       String
+  priority              LeadPriority
+  status                LeadStatus       @default(PENDING)
+  resident              ResidentProfile  @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  serviceLeads          ServiceLead[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@index([residentId])
+  @@index([intentType])
+  @@index([priority, status])
+  @@index([suggestedReceiverType])
+}
+
+model ServiceLead {
+  id                    String            @id @default(cuid())
+  residentId            String
+  intentInsightId       String?
+  receiverType          LeadReceiverType
+  receiverInstitutionId String?
+  receiverDepartmentId  String?
+  leadType              LeadType
+  title                 String
+  summary               String
+  suggestedAction       String
+  priority              LeadPriority
+  status                LeadStatus        @default(PENDING)
+  resident              ResidentProfile   @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  intentInsight         IntentInsight?     @relation(fields: [intentInsightId], references: [id], onDelete: SetNull)
+  receiverInstitution   Institution?      @relation(fields: [receiverInstitutionId], references: [id], onDelete: SetNull)
+  receiverDepartment    Department?       @relation(fields: [receiverDepartmentId], references: [id], onDelete: SetNull)
+  feedback              LeadFeedback[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([residentId])
+  @@index([intentInsightId])
+  @@index([receiverType, status])
+  @@index([receiverInstitutionId])
+  @@index([receiverDepartmentId])
+  @@index([leadType])
+  @@index([priority])
+}
+
+model LeadFeedback {
+  id            String      @id @default(cuid())
+  serviceLeadId String
+  operatorRole  String
+  operatorName  String
+  feedbackType  String
+  comment       String
+  serviceLead   ServiceLead @relation(fields: [serviceLeadId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@index([serviceLeadId])
+  @@index([feedbackType])
+}
