@@ -73,6 +73,18 @@ pnpm dev
 
 打开 http://localhost:3000。如果端口被占用，Next.js 会自动使用其他端口。
 
+## Render 部署
+
+仓库根目录包含 `render.yaml`，可在 Render Dashboard 通过 Blueprint 导入本仓库部署。
+
+- Runtime：Node
+- Region：Singapore
+- Build Command：`corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm build`
+- Start Command：`pnpm render:start`
+- Database：SQLite，默认写入持久磁盘 `/var/data/gaoxin-health.db`
+
+首次启动时，`scripts/render-start.sh` 会运行 Prisma migration，并在数据库为空时自动写入 Mock 演示数据。由于 Render 持久磁盘只支持付费 Web Service，Blueprint 使用 `starter` plan 和 1GB disk。
+
 ## 数据库初始化
 
 ```bash

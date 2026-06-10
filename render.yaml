@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: gaoxin-health
+    runtime: node
+    region: singapore
+    plan: starter
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm build
+    startCommand: pnpm render:start
+    autoDeployTrigger: commit
+    healthCheckPath: /
+    disk:
+      name: gaoxin-health-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: DATABASE_URL
+        value: file:/var/data/gaoxin-health.db

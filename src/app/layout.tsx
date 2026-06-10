@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: "成都高新区全民健康档案与智能导诊平台 MVP 原型",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
