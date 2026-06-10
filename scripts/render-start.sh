@@ -2,14 +2,14 @@
 set -euo pipefail
 
 export NODE_ENV="${NODE_ENV:-production}"
-export DATABASE_URL="${DATABASE_URL:-file:/var/data/gaoxin-health.db}"
+export DATABASE_URL="${DATABASE_URL:-file:./dev.db}"
 
 if [[ "${DATABASE_URL}" == file:* ]]; then
   db_path="${DATABASE_URL#file:}"
   mkdir -p "$(dirname "${db_path}")"
 fi
 
-RUST_LOG="${RUST_LOG:-info}" pnpm exec prisma migrate deploy
+RUST_LOG=info pnpm exec prisma migrate deploy
 
 if [[ "${FORCE_SEED_DATABASE:-false}" == "true" ]]; then
   pnpm db:seed
