@@ -1,4 +1,4 @@
-import { rankRecommendations } from "@/lib/matching/resource-matcher"
+import { rankRecommendations } from "@/lib/recommendation"
 
 import { runLoggedAgent } from "./logging"
 import type { RecommendationDraft, ResourceBundle, TriageAgentOutput } from "./types"

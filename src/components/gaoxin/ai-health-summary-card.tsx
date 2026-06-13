@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Activity, Bed, ClipboardCheck, Footprints } from "lucide-react"
 
-import type { GaoxinHealthSummaryView } from "@/lib/gaoxin/health-summary-adapter"
+import type { GaoxinHealthSummaryView } from "@/lib/health-record"
 import { trackUserAction } from "@/lib/intent/client-action"
 
 export function AiHealthSummaryCard({

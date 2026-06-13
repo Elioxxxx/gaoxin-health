@@ -11,7 +11,7 @@ import { GaoxinActionTracker } from "@/components/gaoxin/gaoxin-action-tracker"
 import {
   adaptGaoxinHealthSummary,
   type GaoxinHealthSummaryView,
-} from "@/lib/gaoxin/health-summary-adapter"
+} from "@/lib/health-record"
 
 type ApiData<T> = {
   data: T

@@ -1,4 +1,4 @@
-import { evaluateTriage } from "@/lib/rules/rule-engine"
+import { evaluateTriage } from "@/lib/pre-consult/triage"
 
 import { runLoggedAgent } from "./logging"
 import type { ReportGenerationOutput } from "./types"

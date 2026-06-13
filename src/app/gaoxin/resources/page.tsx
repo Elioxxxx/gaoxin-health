@@ -1,6 +1,9 @@
 import { GaoxinResourcesClient } from "@/components/gaoxin/gaoxin-resources-client"
-import { prisma } from "@/lib/db/prisma"
-import { adaptGaoxinDoctors, adaptGaoxinInstitutions } from "@/lib/gaoxin/resources-adapter"
+import { adaptGaoxinDoctors, adaptGaoxinInstitutions } from "@/lib/resource"
+import {
+  listDoctorsForResources,
+  listInstitutionsForResources,
+} from "@/server/queries/resource-query"
 
 export default async function GaoxinResourcesPage({
   searchParams,
@@ -9,21 +12,8 @@ export default async function GaoxinResourcesPage({
 }) {
   const { from, institution, department } = await searchParams
   const [institutions, doctors] = await Promise.all([
-    prisma.institution.findMany({
-      orderBy: [{ type: "asc" }, { name: "asc" }],
-      include: {
-        departments: true,
-        doctors: true,
-        serviceCapabilities: true,
-      },
-    }),
-    prisma.doctor.findMany({
-      orderBy: [{ isExpert: "desc" }, { name: "asc" }],
-      include: {
-        institution: true,
-        department: true,
-      },
-    }),
+    listInstitutionsForResources(),
+    listDoctorsForResources(),
   ])
 
   return (

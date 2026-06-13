@@ -1,15 +1,18 @@
 import { MessageRole, SessionStatus } from "@/generated/prisma/client"
-import { runFollowUpAgent } from "@/lib/ai/agents/follow-up-agent"
-import { runGuideAgent } from "@/lib/ai/agents/guide-agent"
-import { runHealthSummaryAgent } from "@/lib/ai/agents/health-summary-agent"
-import { runPreConsultAgent } from "@/lib/ai/agents/pre-consult-agent"
-import { runRecommendationAgent } from "@/lib/ai/agents/recommendation-agent"
-import { runReportGenerationAgent } from "@/lib/ai/agents/report-generation-agent"
-import { runTriageAgent } from "@/lib/ai/agents/triage-agent"
-import type { RecommendationDraft } from "@/lib/ai/agents/types"
 import { detectScenario } from "@/lib/ai/scenarios"
 import { prisma } from "@/lib/db/prisma"
 import { stringifyJson } from "@/lib/json"
+
+import {
+  runFollowUpAgent,
+  runGuideAgent,
+  runHealthSummaryAgent,
+  runPreConsultAgent,
+  runRecommendationAgent,
+  runReportGenerationAgent,
+  runTriageAgent,
+  type RecommendationDraft,
+} from "./agents"
 
 const scenarioResidentNames: Record<string, string> = {
   chest_pain_high_risk: "张建国",

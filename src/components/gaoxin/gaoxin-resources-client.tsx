@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { Bot, ChevronRight, Search } from "lucide-react"
 
-import type { GaoxinDoctorItem, GaoxinInstitutionItem } from "@/lib/gaoxin/resources-adapter"
+import type { GaoxinDoctorItem, GaoxinInstitutionItem } from "@/lib/resource"
 import { trackUserAction } from "@/lib/intent/client-action"
 import { cn } from "@/lib/utils"
 

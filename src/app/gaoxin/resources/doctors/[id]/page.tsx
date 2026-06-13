@@ -5,8 +5,8 @@ import { notFound } from "next/navigation"
 
 import { GaoxinActionTracker } from "@/components/gaoxin/gaoxin-action-tracker"
 import { GaoxinTrackedLink } from "@/components/gaoxin/gaoxin-tracked-link"
-import { prisma } from "@/lib/db/prisma"
 import { parseJsonArray } from "@/lib/json"
+import { getDoctorDetails } from "@/server/queries/resource-query"
 
 export default async function GaoxinDoctorDetailPage({
   params,
@@ -14,14 +14,7 @@ export default async function GaoxinDoctorDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const doctor = await prisma.doctor.findUnique({
-    where: { id },
-    include: {
-      institution: true,
-      department: true,
-      expertPool: true,
-    },
-  })
+  const doctor = await getDoctorDetails(id)
 
   if (!doctor) {
     notFound()

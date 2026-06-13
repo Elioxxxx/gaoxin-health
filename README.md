@@ -26,6 +26,13 @@ pnpm build
 
 `pnpm operational-demo-check` 会验证运营演示增强包，包括 16 个患者案例、医生版健康档案、用户行为事件、意图洞察、服务线索和重点患者数据完整性。
 
+## 产品设计与模块说明
+
+后续迭代、模块拆分和公网部署前，建议先阅读：
+
+- [产品设计与模块说明](docs/product-design-and-module-map.md)
+- [阿里云/火山云 ECS 部署说明](docs/deployment-ecs.md)
+
 ## 项目简介
 
 本项目是“健康高新”官方居民健康服务入口的 Web/H5 MVP 原型，演示居民智能预问诊、健康档案摘要、P0-P4 分诊、医疗资源推荐、导诊指引、医生反馈和卫健管理端运行治理闭环。
@@ -49,19 +56,31 @@ pnpm build
 ## 目录结构
 
 ```text
-src/app/app              居民端 H5 页面
+src/app/gaoxin           高新健康融合版居民端
 src/app/doctor           医生端工作台
 src/app/admin            卫健管理端
 src/app/api              API Route Handlers
-src/components/resident  居民端组件
+src/components/gaoxin    融合版小程序风组件
 src/components/doctor    医生端组件
 src/components/admin     管理端组件
 src/lib/ai               AI Provider 与 Agent
-src/lib/rules            分诊规则引擎
-src/lib/matching         医疗资源匹配算法
+src/lib/pre-consult      预问诊会话与 Agent 编排入口
+src/lib/health-record    健康档案展示适配入口
+src/lib/resource         医疗资源展示适配入口
+src/lib/recommendation   推荐算法入口
+src/lib/intent           行为、意图与服务线索
+src/lib/admin            卫健统计聚合
+src/lib/rules            分诊规则引擎兼容层
+src/lib/matching         医疗资源匹配算法兼容层
 src/lib/db               Prisma Client
+src/server/queries       服务端聚合查询
+src/server/mutations     服务端写入操作
+prisma/seed.ts           Seed 编排入口
+prisma/seed              机构、居民、运营案例、知识库、预问诊演示 Seed 模块
 prisma                   Schema、Migration、Seed
 scripts                  smoke 与 final-check 脚本
+deploy                   ECS 部署脚本、Nginx 和 systemd 示例
+docs/deployment-ecs.md   阿里云/火山云 ECS 部署手册
 ```
 
 ## 本地启动
@@ -102,11 +121,13 @@ pnpm exec prisma migrate dev --name init
 ## 演示路径
 
 - `/`：系统入口与四个演示场景
-- `/app`：居民端首页
-- `/app/pre-consult`：智能预问诊
-- `/app/health-record`：我的健康档案
-- `/app/resources`：医疗资源
-- `/app/health-management`：健康管理
+- `/gaoxin`：高新健康融合版居民端首页
+- `/gaoxin/ai`：小高健康助手
+- `/gaoxin/pre-consult`：智能预问诊
+- `/gaoxin/health-record`：全民健康档案
+- `/gaoxin/resources`：医疗资源
+- `/gaoxin/health-management`：健康管理
+- `/gaoxin/records`：我的记录
 - `/doctor`：医生工作台
 - `/doctor/schedule`：今日接诊
 - `/admin`：卫健运行驾驶舱
@@ -169,10 +190,10 @@ pnpm dev
 
 打开 `/gaoxin`，点击“小高健康助手”中的演示入口，完成智能预问诊、分诊推荐、导诊指引，并在 `/gaoxin/records`、`/gaoxin/health-record`、`/gaoxin/health-management` 查看记录和健康数据。
 
-### 与原有 /app 的关系
+### 与旧原型居民端的关系
 
-- `/app` 是原型居民端，用于展示本项目第一版居民 H5 能力。
-- `/gaoxin` 是融合现有健康高新小程序板式后的居民端，用于最终产品形态演示。
+- 旧 `/app` 原型居民端已下线，并从代码中移除。
+- `/gaoxin` 是当前唯一居民端产品线，用于演示融合现有健康高新小程序板式后的最终产品形态。
 - `/doctor` 和 `/admin` 保持不变，融合版居民端生成的预问诊 session 仍会进入医生工作台和卫健管理端数据。
 
 ### 启动命令

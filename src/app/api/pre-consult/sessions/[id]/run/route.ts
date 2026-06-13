@@ -1,5 +1,5 @@
 import { fail, getRouteParams, ok, type RouteContext } from "@/lib/api/response"
-import { runPreConsultSession } from "@/lib/pre-consult/session-service"
+import { runPreConsultSession } from "@/lib/pre-consult"
 
 export async function POST(_request: Request, context: RouteContext<{ id: string }>) {
   const { id } = await getRouteParams(context)

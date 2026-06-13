@@ -1,6 +1,7 @@
 import { ok } from "@/lib/api/response"
-import { prisma } from "@/lib/db/prisma"
 import { LeadPriority, LeadReceiverType, LeadStatus } from "@/generated/prisma/client"
+import { enumValue } from "@/server/queries/filter-utils"
+import { listAdminServiceLeads } from "@/server/queries/admin-query"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
@@ -8,25 +9,7 @@ export async function GET(request: Request) {
   const status = enumValue(LeadStatus, url.searchParams.get("status"))
   const priority = enumValue(LeadPriority, url.searchParams.get("priority"))
 
-  const leads = await prisma.serviceLead.findMany({
-    where: {
-      receiverType,
-      status,
-      priority,
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      resident: true,
-      intentInsight: true,
-      receiverInstitution: true,
-      receiverDepartment: true,
-      feedback: { orderBy: { createdAt: "desc" } },
-    },
-  })
+  const leads = await listAdminServiceLeads({ receiverType, status, priority })
 
   return ok({ leads })
-}
-
-function enumValue<T extends Record<string, string>>(values: T, value: string | null) {
-  return value && Object.values(values).includes(value) ? (value as T[keyof T]) : undefined
 }

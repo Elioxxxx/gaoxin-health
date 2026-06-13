@@ -17,26 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { prisma } from "@/lib/db/prisma"
+import { getDoctorScheduleSessions } from "@/server/queries/doctor-query"
 
 const statuses = ["待到诊", "已到诊", "已完成", "已转诊"]
 
 export default async function DoctorSchedulePage() {
-  const sessions = await prisma.preConsultSession.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: {
-      resident: true,
-      triageResult: true,
-      recommendations: {
-        orderBy: { rank: "asc" },
-        include: {
-          institution: true,
-          department: true,
-          doctor: true,
-        },
-      },
-    },
-  })
+  const sessions = await getDoctorScheduleSessions()
 
   return (
     <div className="space-y-6">

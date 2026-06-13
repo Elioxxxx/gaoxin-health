@@ -1,17 +1,10 @@
 import { created, ok, readJson } from "@/lib/api/response"
 import { prisma } from "@/lib/db/prisma"
 import { stringifyJson } from "@/lib/json"
+import { listInstitutionsForResources } from "@/server/queries/resource-query"
 
 export async function GET() {
-  const institutions = await prisma.institution.findMany({
-    orderBy: [{ type: "asc" }, { name: "asc" }],
-    include: {
-      departments: true,
-      serviceCapabilities: true,
-    },
-  })
-
-  return ok(institutions)
+  return ok(await listInstitutionsForResources())
 }
 
 export async function POST(request: Request) {

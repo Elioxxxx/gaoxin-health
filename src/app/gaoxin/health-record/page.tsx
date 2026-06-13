@@ -15,7 +15,7 @@ import {
 import { GaoxinActionTracker } from "@/components/gaoxin/gaoxin-action-tracker"
 import { GaoxinHealthCard } from "@/components/gaoxin/gaoxin-health-card"
 import { prisma } from "@/lib/db/prisma"
-import { adaptGaoxinHealthRecord } from "@/lib/gaoxin/health-record-adapter"
+import { adaptGaoxinHealthRecord } from "@/lib/health-record"
 
 export default async function GaoxinHealthRecordPage() {
   const resident = await prisma.residentProfile.findFirst({

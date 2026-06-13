@@ -14,12 +14,12 @@ import { demoScenarios } from "@/lib/demo-scenarios";
 
 const portals = [
   {
-    href: "/app",
-    title: "居民端",
-    description: "进入健康高新 H5 服务入口，体验智能预问诊与导诊指引。",
-    icon: HeartPulse,
-    badge: "H5 原型",
-    cta: "进入居民端",
+    href: "/gaoxin",
+    title: "高新健康融合版",
+    description: "模拟现有健康高新小程序接入小高健康助手后的融合居民端。",
+    icon: Smartphone,
+    badge: "居民端",
+    cta: "查看高新健康融合版小程序",
   },
   {
     href: "/doctor",
@@ -37,15 +37,14 @@ const portals = [
     badge: "管理后台",
     cta: "进入卫健管理端",
   },
-  {
-    href: "/gaoxin",
-    title: "高新健康融合版",
-    description: "模拟现有健康高新小程序接入小高健康助手后的融合居民端。",
-    icon: Smartphone,
-    badge: "融合版",
-    cta: "查看高新健康融合版小程序",
-  },
 ];
+
+const gaoxinDemoKeyMap: Record<string, string> = {
+  chest_pain_high_risk: "chest-pain",
+  hypertension_followup: "hypertension",
+  child_fever: "child-fever",
+  high_glucose_exam: "blood-sugar",
+};
 
 export default function Home() {
   const scenarioIcons = [Activity, HeartPulse, Baby, Syringe];
@@ -65,7 +64,7 @@ export default function Home() {
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-3">
           {portals.map((portal) => {
             const Icon = portal.icon;
 
@@ -100,7 +99,7 @@ export default function Home() {
           <div>
             <h2 className="text-xl font-semibold text-slate-950">演示场景</h2>
             <p className="mt-1 text-sm text-slate-600">
-              点击任一居民场景，可进入居民端预问诊并自动填入症状描述。
+              点击任一居民场景，可进入高新健康融合版智能预问诊并自动填入症状描述。
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-4">
@@ -123,7 +122,7 @@ export default function Home() {
                       {scenario.description}
                     </p>
                     <Link
-                      href={`/app/pre-consult?scenario=${scenario.key}&input=${encodeURIComponent(scenario.input)}`}
+                      href={`/gaoxin/pre-consult?demo=${gaoxinDemoKeyMap[scenario.key] ?? scenario.key}&input=${encodeURIComponent(scenario.input)}`}
                       className={buttonVariants({
                         variant: "outline",
                         className: "w-full",

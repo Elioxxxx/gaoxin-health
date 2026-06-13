@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 
 import { PatientDetailTabs } from "@/components/doctor/patient-detail-tabs"
 import { DoctorTriageBadge } from "@/components/doctor/doctor-badges"
-import { prisma } from "@/lib/db/prisma"
+import { getDoctorPatientDetail } from "@/server/queries/doctor-query"
 
 export default async function DoctorPatientDetailPage({
   params,
@@ -10,44 +10,7 @@ export default async function DoctorPatientDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const patient = await prisma.residentProfile.findUnique({
-    where: { id },
-    include: {
-      healthTags: true,
-      healthSummaries: { orderBy: { createdAt: "desc" } },
-      medicalRecords: { orderBy: { visitDate: "desc" } },
-      diagnoses: true,
-      medications: true,
-      allergies: true,
-      labResults: true,
-      doctorProfiles: {
-        orderBy: { generatedAt: "desc" },
-        include: { riskFocusItems: { orderBy: [{ priority: "asc" }, { createdAt: "asc" }] } },
-      },
-      userActionEvents: { orderBy: { occurredAt: "desc" } },
-      intentInsights: { orderBy: { createdAt: "desc" } },
-      serviceLeads: { orderBy: { createdAt: "desc" } },
-      sessions: {
-        orderBy: { updatedAt: "desc" },
-        include: {
-          messages: { orderBy: { createdAt: "asc" } },
-          report: true,
-          triageResult: true,
-          recommendations: {
-            orderBy: { rank: "asc" },
-            include: {
-              institution: true,
-              department: true,
-              doctor: true,
-              guidePlans: true,
-            },
-          },
-          guidePlans: true,
-          agentRuns: { orderBy: { createdAt: "asc" } },
-        },
-      },
-    },
-  })
+  const patient = await getDoctorPatientDetail(id)
 
   if (!patient) {
     notFound()

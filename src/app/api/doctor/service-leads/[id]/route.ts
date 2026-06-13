@@ -1,28 +1,20 @@
 import { fail, getRouteParams, ok, readJson, type RouteContext } from "@/lib/api/response"
-import { prisma } from "@/lib/db/prisma"
 import { LeadStatus } from "@/generated/prisma/client"
-
-const statuses = new Set(Object.values(LeadStatus))
+import {
+  isServiceLeadStatus,
+  updateDoctorServiceLeadStatus,
+} from "@/server/mutations/service-lead-mutation"
 
 export async function PUT(request: Request, context: RouteContext<{ id: string }>) {
   try {
     const { id } = await getRouteParams(context)
     const body = await readJson<{ status?: LeadStatus | string }>(request)
 
-    if (!body.status || !statuses.has(body.status as LeadStatus)) {
+    if (!isServiceLeadStatus(body.status)) {
       return fail("validation_error", "不支持的线索状态", 422)
     }
 
-    const lead = await prisma.serviceLead.update({
-      where: { id },
-      data: { status: body.status as LeadStatus },
-      include: {
-        resident: true,
-        receiverInstitution: true,
-        receiverDepartment: true,
-        intentInsight: true,
-      },
-    })
+    const lead = await updateDoctorServiceLeadStatus(id, body.status)
 
     return ok({ lead })
   } catch (error) {

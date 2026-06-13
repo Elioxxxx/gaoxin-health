@@ -1,0 +1,16 @@
+[Unit]
+Description=Gaoxin Health Next.js Demo
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/gaoxin-health
+EnvironmentFile=/opt/gaoxin-health/.env.production
+ExecStart=/usr/bin/bash -lc 'pnpm db:generate && pnpm db:deploy && pnpm start:ecs'
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

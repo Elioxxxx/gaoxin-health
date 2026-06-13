@@ -4,45 +4,18 @@ import { AlertTriangle, ClipboardList, MessageSquareCheck, UsersRound } from "lu
 import { WorklistTable, type WorklistItem } from "@/components/doctor/worklist-table"
 import { buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { prisma } from "@/lib/db/prisma"
-import { LeadReceiverType, LeadStatus } from "@/generated/prisma/client"
+import { getDoctorWorkspaceData } from "@/server/queries/doctor-query"
 
 export default async function DoctorWorkspacePage() {
-  const patients = await prisma.residentProfile.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: {
-      healthTags: true,
-      doctorProfiles: { orderBy: { generatedAt: "desc" }, take: 1 },
-      intentInsights: { orderBy: { createdAt: "desc" }, take: 2 },
-      serviceLeads: { where: { status: { in: [LeadStatus.PENDING, LeadStatus.VIEWED] } } },
-      sessions: {
-        orderBy: { updatedAt: "desc" },
-        take: 1,
-        include: {
-          triageResult: true,
-          report: true,
-          recommendations: {
-            orderBy: { rank: "asc" },
-            include: {
-              institution: true,
-              department: true,
-              doctor: true,
-            },
-          },
-        },
-      },
-    },
-  })
-  const feedbackCount = await prisma.agentFeedback.count()
-  const highRiskCount = patients.filter((item) =>
-    ["P0", "P1"].includes(item.sessions[0]?.triageResult?.level ?? "")
-  ).length
-  const doctorProfileCount = patients.filter((item) => item.doctorProfiles.length > 0).length
-  const [hospitalLeadCount, communityLeadCount, pendingLeadCount] = await Promise.all([
-    prisma.serviceLead.count({ where: { receiverType: LeadReceiverType.HOSPITAL } }),
-    prisma.serviceLead.count({ where: { receiverType: LeadReceiverType.COMMUNITY_HEALTH_CENTER } }),
-    prisma.serviceLead.count({ where: { status: { in: [LeadStatus.PENDING, LeadStatus.VIEWED] } } }),
-  ])
+  const {
+    patients,
+    feedbackCount,
+    highRiskCount,
+    doctorProfileCount,
+    hospitalLeadCount,
+    communityLeadCount,
+    pendingLeadCount,
+  } = await getDoctorWorkspaceData()
 
   return (
     <div className="space-y-6">

@@ -5,8 +5,8 @@ import { notFound } from "next/navigation"
 
 import { GaoxinActionTracker } from "@/components/gaoxin/gaoxin-action-tracker"
 import { GaoxinTrackedLink } from "@/components/gaoxin/gaoxin-tracked-link"
-import { prisma } from "@/lib/db/prisma"
 import { parseJsonArray } from "@/lib/json"
+import { getInstitutionDetails } from "@/server/queries/resource-query"
 
 export default async function GaoxinInstitutionDetailPage({
   params,
@@ -14,14 +14,7 @@ export default async function GaoxinInstitutionDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const institution = await prisma.institution.findUnique({
-    where: { id },
-    include: {
-      departments: { include: { doctors: true } },
-      doctors: { include: { department: true } },
-      serviceCapabilities: true,
-    },
-  })
+  const institution = await getInstitutionDetails(id)
 
   if (!institution) {
     notFound()

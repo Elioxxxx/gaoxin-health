@@ -1,5 +1,5 @@
 import { created, fail, readJson } from "@/lib/api/response"
-import { createPreConsultSession } from "@/lib/pre-consult/session-service"
+import { createPreConsultSession } from "@/lib/pre-consult"
 
 export async function POST(request: Request) {
   try {

@@ -1,25 +1,8 @@
 import { DoctorServiceLeadsDashboard, type DoctorServiceLeadItem } from "@/components/doctor/doctor-service-leads-dashboard"
-import { prisma } from "@/lib/db/prisma"
+import { listDoctorServiceLeads } from "@/server/queries/doctor-query"
 
 export default async function DoctorServiceLeadsPage() {
-  const leads = await prisma.serviceLead.findMany({
-    orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
-    include: {
-      resident: {
-        include: {
-          healthTags: true,
-          userActionEvents: {
-            orderBy: { occurredAt: "desc" },
-            take: 3,
-          },
-        },
-      },
-      intentInsight: true,
-      receiverInstitution: true,
-      receiverDepartment: true,
-      feedback: { orderBy: { createdAt: "desc" }, take: 3 },
-    },
-  })
+  const leads = await listDoctorServiceLeads()
 
   return (
     <div className="space-y-6">
