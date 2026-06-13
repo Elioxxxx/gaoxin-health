@@ -26,7 +26,8 @@
     "gaoxin-check": "tsx scripts/gaoxin-check.ts",
     "patient-demo-check": "tsx scripts/patient-demo-check.ts",
     "intent-demo-check": "tsx scripts/intent-demo-check.ts",
-    "operational-demo-check": "tsx scripts/operational-demo-check.ts"
+    "operational-demo-check": "tsx scripts/operational-demo-check.ts",
+    "production-readiness": "tsx scripts/production-readiness-check.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

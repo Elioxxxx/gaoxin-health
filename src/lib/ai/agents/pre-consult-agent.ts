@@ -1,4 +1,4 @@
-import { getAiProvider } from "@/lib/ai/provider"
+import { getAiGateway } from "@/lib/ai/gateway"
 import { detectScenario } from "@/lib/ai/scenarios"
 
 import { runLoggedAgent } from "./logging"
@@ -14,9 +14,10 @@ export async function runPreConsultAgent(input: {
     sessionId: input.sessionId,
     input,
     handler: async (): Promise<PreConsultAgentOutput> => {
-      const provider = getAiProvider()
-      const output = await provider.completeJson<PreConsultAgentOutput>({
+      const gateway = getAiGateway()
+      const output = await gateway.completeJson<PreConsultAgentOutput>({
         task: "pre-consult",
+        schemaName: "PreConsultAgentOutput",
         input,
       })
 

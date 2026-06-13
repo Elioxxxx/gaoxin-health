@@ -31,6 +31,7 @@ pnpm build
 后续迭代、模块拆分和公网部署前，建议先阅读：
 
 - [产品设计与模块说明](docs/product-design-and-module-map.md)
+- [生产化架构优化方案](docs/production-architecture-plan.md)
 - [阿里云/火山云 ECS 部署说明](docs/deployment-ecs.md)
 
 ## 项目简介
