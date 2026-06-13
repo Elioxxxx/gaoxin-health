@@ -66,11 +66,9 @@ export function handleApiError(error: unknown, fallbackCode: string, fallbackMes
     )
   }
 
-  return fail(
-    fallbackCode,
-    error instanceof Error ? error.message : fallbackMessage,
-    500
-  )
+  console.error(fallbackCode, error)
+
+  return fail(fallbackCode, fallbackMessage, 500)
 }
 
 export async function readJson<T>(request: Request): Promise<T> {

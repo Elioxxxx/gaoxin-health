@@ -28,6 +28,14 @@ P0 第一阶段已继续落地：
 - `src/lib/api/schemas.ts`：新增关键写接口 zod schema。
 - 关键写接口已接入校验、权限和审计：预问诊创建、预问诊消息、预问诊运行、行为记录、意图分析、服务线索状态更新。
 
+P0 第二阶段已继续落地：
+
+- 管理端机构、科室、医生、分诊规则、知识库、质量问题等写接口补齐 zod 校验、RBAC 权限和审计日志。
+- 医生端反馈、服务线索反馈接口补齐 zod 校验、RBAC 权限和审计日志。
+- `AiInvocation` 写入 promptVersion、token 估算、结构化输出校验摘要和成本估算占位，便于后续真实模型运营看板扩展。
+- `src/server/dto/pre-consult-result-dto.ts`：新增居民端安全 DTO 与专业端 DTO；预问诊结果 API 默认返回居民安全版本，`view=professional` / `view=legacy` 需通过专业端权限检查后才返回内部分析字段。
+- `docs/postgresql-migration-plan.md`：新增 PostgreSQL 生产数据库迁移 runbook，明确 Demo SQLite、沙箱数据和生产数据的切换边界。
+
 ## 3. 推荐目标架构
 
 ```text
@@ -124,6 +132,8 @@ LLM 主要承担：
 - 建立 Auth、RBAC、ABAC、Consent、Audit、Privacy 服务。
 - 扩展 AgentRun：记录 provider、model、promptVersion、latency、token/cost、结构化校验结果。
 - 居民端 DTO 与医生/卫健专业 DTO 后端分离，防止内部字段泄漏。
+
+当前 P0 已完成可演示的后端边界与文档地基；仍需在真实生产环境接入正式身份认证、Consent 管理、真实 PostgreSQL/RDS 实例和生产级限流/CSRF/HTTPS/WAF。
 
 ### P1：先接低风险真实数据
 

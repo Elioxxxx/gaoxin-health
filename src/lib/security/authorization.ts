@@ -7,13 +7,20 @@ export type Permission =
   | "pre-consult:write"
   | "intent:write"
   | "service-lead:update"
+  | "feedback:write"
   | "admin:manage"
 
 const rolePermissions: Record<AuthContext["role"], Permission[]> = {
-  SYSTEM: ["pre-consult:write", "intent:write", "service-lead:update", "admin:manage"],
+  SYSTEM: [
+    "pre-consult:write",
+    "intent:write",
+    "service-lead:update",
+    "feedback:write",
+    "admin:manage",
+  ],
   [Role.RESIDENT]: ["pre-consult:write", "intent:write"],
-  [Role.DOCTOR]: ["service-lead:update", "intent:write"],
-  [Role.ADMIN]: ["service-lead:update", "admin:manage", "intent:write"],
+  [Role.DOCTOR]: ["service-lead:update", "intent:write", "feedback:write"],
+  [Role.ADMIN]: ["service-lead:update", "admin:manage", "intent:write", "feedback:write"],
 }
 
 export function requirePermission(auth: AuthContext, permission: Permission) {

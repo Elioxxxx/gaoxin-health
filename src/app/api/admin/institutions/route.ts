@@ -1,6 +1,16 @@
-import { created, ok, readJson } from "@/lib/api/response"
+import { institutionCreateSchema } from "@/lib/api/schemas"
+import {
+  created,
+  getRequestContextMeta,
+  handleApiError,
+  ok,
+  parseJsonBody,
+} from "@/lib/api/response"
 import { prisma } from "@/lib/db/prisma"
 import { stringifyJson } from "@/lib/json"
+import { getAuthContext } from "@/lib/security/auth-context"
+import { requirePermission } from "@/lib/security/authorization"
+import { safeAuditLog } from "@/lib/security/audit"
 
 export async function GET() {
   const institutions = await prisma.institution.findMany({
@@ -16,24 +26,46 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await readJson<{
-    name: string
-    type: "TERTIARY_HOSPITAL" | "COMMUNITY_HEALTH_CENTER"
-    level?: string
-    address?: string
-    description?: string
-    capabilities?: unknown
-  }>(request)
-  const institution = await prisma.institution.create({
-    data: {
-      name: body.name,
-      type: body.type,
-      level: body.level ?? "待配置",
-      address: body.address ?? "待配置",
-      description: body.description ?? "管理端新增机构",
-      capabilities: stringifyJson(body.capabilities ?? []),
-    },
-  })
+  const requestMeta = getRequestContextMeta(request)
+  const auth = getAuthContext(request)
 
-  return created(institution)
+  try {
+    requirePermission(auth, "admin:manage")
+    const body = await parseJsonBody(request, institutionCreateSchema)
+    const institution = await prisma.institution.create({
+      data: {
+        name: body.name,
+        type: body.type,
+        level: body.level ?? "待配置",
+        address: body.address ?? "待配置",
+        description: body.description ?? "管理端新增机构",
+        capabilities: stringifyJson(body.capabilities ?? []),
+      },
+    })
+
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "ADMIN_RESOURCE_MANAGEMENT",
+      action: "CREATE_INSTITUTION",
+      resourceType: "Institution",
+      resourceId: institution.id,
+      result: "SUCCESS",
+      metadata: { name: institution.name, type: institution.type },
+    })
+
+    return created(institution)
+  } catch (error) {
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "ADMIN_RESOURCE_MANAGEMENT",
+      action: "CREATE_INSTITUTION",
+      resourceType: "Institution",
+      result: "FAILED",
+      metadata: { message: error instanceof Error ? error.message : "unknown" },
+    })
+
+    return handleApiError(error, "institution_create_failed", "机构创建失败")
+  }
 }

@@ -148,6 +148,16 @@ async function recordAiInvocation(input: {
       typeof input.request.metadata?.sessionId === "string"
         ? input.request.metadata.sessionId
         : undefined
+    const tokenUsage = estimateTokenUsage(input.input, input.output)
+    const structuredOutput = validateStructuredOutput(
+      input.request.schemaName,
+      input.output,
+      input.status
+    )
+    const promptVersion =
+      typeof input.request.metadata?.promptVersion === "string"
+        ? input.request.metadata.promptVersion
+        : `${input.request.task}:${input.request.schemaName ?? "json"}:v0`
 
     await prisma.aiInvocation.create({
       data: {
@@ -161,13 +171,17 @@ async function recordAiInvocation(input: {
         inputPreviewJson: previewJson(input.input),
         outputPreviewJson: input.output ? previewJson(input.output) : undefined,
         errorMessage: input.errorMessage,
-        promptVersion:
-          typeof input.request.metadata?.promptVersion === "string"
-            ? input.request.metadata.promptVersion
-            : undefined,
+        promptVersion,
+        tokenUsageJson: stringifyJson(tokenUsage),
         metadataJson: stringifyJson({
           ...(input.request.metadata ?? {}),
           ...(input.metadata ?? {}),
+          structuredOutput,
+          costEstimate: {
+            currency: "CNY",
+            amount: input.provider === "mock" ? 0 : null,
+            basis: input.provider === "mock" ? "mock-provider" : "rate-card-not-configured",
+          },
         }),
       },
     })
@@ -181,4 +195,46 @@ function previewJson(value: unknown) {
   const serialized = stringifyJson(redacted)
 
   return serialized.length > 6000 ? `${serialized.slice(0, 6000)}...` : serialized
+}
+
+function estimateTokenUsage(input: unknown, output: unknown) {
+  const inputTokens = estimateTokens(input)
+  const outputTokens = estimateTokens(output)
+
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+    source: "estimated_by_serialized_length",
+  }
+}
+
+function estimateTokens(value: unknown) {
+  if (value === undefined) {
+    return 0
+  }
+
+  return Math.ceil(stringifyJson(redactSensitiveObject(value)).length / 4)
+}
+
+function validateStructuredOutput(
+  schemaName: string | undefined,
+  output: unknown,
+  status: "SUCCESS" | "FAILED"
+) {
+  if (status === "FAILED") {
+    return {
+      schemaName,
+      valid: false,
+      reason: "provider_call_failed",
+    }
+  }
+
+  const valid = output !== null && typeof output === "object" && !Array.isArray(output)
+
+  return {
+    schemaName,
+    valid,
+    reason: valid ? "json_object_output" : "output_is_not_json_object",
+  }
 }

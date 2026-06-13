@@ -32,6 +32,7 @@ pnpm build
 
 - [产品设计与模块说明](docs/product-design-and-module-map.md)
 - [生产化架构优化方案](docs/production-architecture-plan.md)
+- [PostgreSQL 生产数据库迁移方案](docs/postgresql-migration-plan.md)
 - [阿里云/火山云 ECS 部署说明](docs/deployment-ecs.md)
 
 ## 项目简介

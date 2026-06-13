@@ -1,4 +1,5 @@
 import { LeadStatus } from "@/generated/prisma/client"
+import { ApiError } from "@/lib/api/response"
 import { prisma } from "@/lib/db/prisma"
 
 export const serviceLeadStatuses = new Set(Object.values(LeadStatus))
@@ -8,23 +9,31 @@ export function isServiceLeadStatus(value: unknown): value is LeadStatus {
 }
 
 export function updateServiceLeadStatus(id: string, status: LeadStatus) {
-  return prisma.serviceLead.update({
-    where: { id },
-    data: { status },
-  })
+  return prisma.serviceLead
+    .update({
+      where: { id },
+      data: { status },
+    })
+    .catch(() => {
+      throw new ApiError("not_found", "服务线索不存在", 404)
+    })
 }
 
 export function updateDoctorServiceLeadStatus(id: string, status: LeadStatus) {
-  return prisma.serviceLead.update({
-    where: { id },
-    data: { status },
-    include: {
-      resident: true,
-      receiverInstitution: true,
-      receiverDepartment: true,
-      intentInsight: true,
-    },
-  })
+  return prisma.serviceLead
+    .update({
+      where: { id },
+      data: { status },
+      include: {
+        resident: true,
+        receiverInstitution: true,
+        receiverDepartment: true,
+        intentInsight: true,
+      },
+    })
+    .catch(() => {
+      throw new ApiError("not_found", "服务线索不存在", 404)
+    })
 }
 
 export async function createServiceLeadFeedback(input: {
