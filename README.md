@@ -92,17 +92,28 @@ pnpm dev
 
 打开 http://localhost:3000。如果端口被占用，Next.js 会自动使用其他端口。
 
-## Render 部署
+## 阿里云 ECS 发布
 
-仓库根目录包含 `render.yaml`，可在 Render Dashboard 通过 Blueprint 导入本仓库部署。
+当前公网演示默认发布到阿里云 ECS。代码先推送到 GitHub `main` 分支，再由 ECS 拉取最新代码、安装依赖、执行数据库迁移、构建并重启 systemd 服务。
 
-- Runtime：Node
-- Region：Singapore
-- Build Command：`corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm build`
-- Start Command：`pnpm render:start`
-- Database：SQLite，免费版默认写入临时文件 `./dev.db`
+发布前请先做本地验证和秘密信息检查，确认 `.env`、数据库文件、SSH Key、云厂商密钥、Token 等不会进入 Git：
 
-首次启动时，`scripts/render-start.sh` 会运行 Prisma migration，并在数据库为空时自动写入 Mock 演示数据。Render 免费 Web Service 没有持久磁盘，重启或重新部署后本地 SQLite 数据会丢失，但演示数据会在下次启动时自动重建。若后续升级到付费实例，可把 `DATABASE_URL` 改为 `file:/var/data/gaoxin-health.db` 并挂载 persistent disk 到 `/var/data`。
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+git status --short
+git diff --cached --check
+```
+
+ECS 默认目录和服务：
+
+- 代码目录：`/opt/gaoxin-health/current`
+- SQLite 数据库：`/opt/gaoxin-health/data/gaoxin-health.db`
+- systemd 服务：`gaoxin-health.service`
+- Nginx：公网 80 反向代理到 `127.0.0.1:3000`
+
+常规发布流程详见 [阿里云/火山云 ECS 部署说明](docs/deployment-ecs.md)。
 
 ## 数据库初始化
 

@@ -4,13 +4,13 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/gaoxin-health
-EnvironmentFile=/opt/gaoxin-health/.env.production
-ExecStart=/usr/bin/bash -lc 'pnpm db:generate && pnpm db:deploy && pnpm start:ecs'
+WorkingDirectory=/opt/gaoxin-health/current
+EnvironmentFile=/opt/gaoxin-health/current/.env.production
+ExecStart=/usr/bin/bash -lc 'pnpm db:generate && pnpm db:deploy && ./node_modules/.bin/next start -H 127.0.0.1 -p ${PORT:-3000}'
 Restart=always
 RestartSec=5
-User=www-data
-Group=www-data
+User=gaoxin
+Group=gaoxin
 
 [Install]
 WantedBy=multi-user.target
