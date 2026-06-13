@@ -1,32 +1,52 @@
-import { created, fail, readJson } from "@/lib/api/response"
+import {
+  created,
+  getRequestContextMeta,
+  handleApiError,
+  parseJsonBody,
+} from "@/lib/api/response"
+import { createPreConsultSessionSchema } from "@/lib/api/schemas"
 import { createPreConsultSession } from "@/lib/pre-consult"
+import { getAuthContext } from "@/lib/security/auth-context"
+import { requirePermission } from "@/lib/security/authorization"
+import { safeAuditLog } from "@/lib/security/audit"
 
 export async function POST(request: Request) {
+  const requestMeta = getRequestContextMeta(request)
+  const auth = getAuthContext(request)
+
   try {
-    const body = await readJson<{
-      residentId?: string
-      initialInput?: string
-      scenarioKey?: string
-    }>(request)
-
-    const initialInput = body.initialInput?.trim()
-
-    if (!initialInput) {
-      return fail("validation_error", "initialInput 不能为空", 422)
-    }
+    requirePermission(auth, "pre-consult:write")
+    const body = await parseJsonBody(request, createPreConsultSessionSchema)
 
     const session = await createPreConsultSession({
       residentId: body.residentId,
-      initialInput,
+      initialInput: body.initialInput,
       scenarioKey: body.scenarioKey,
+    })
+
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "PRE_CONSULT",
+      action: "CREATE_SESSION",
+      resourceType: "PreConsultSession",
+      resourceId: session.id,
+      result: "SUCCESS",
+      metadata: { scenarioKey: session.scenarioKey },
     })
 
     return created(session)
   } catch (error) {
-    return fail(
-      "create_session_failed",
-      error instanceof Error ? error.message : "创建智能预问诊会话失败",
-      500
-    )
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "PRE_CONSULT",
+      action: "CREATE_SESSION",
+      resourceType: "PreConsultSession",
+      result: "FAILED",
+      metadata: { message: error instanceof Error ? error.message : "unknown" },
+    })
+
+    return handleApiError(error, "create_session_failed", "创建智能预问诊会话失败")
   }
 }

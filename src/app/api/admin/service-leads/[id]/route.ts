@@ -1,23 +1,51 @@
-import { fail, getRouteParams, ok, readJson, type RouteContext } from "@/lib/api/response"
-import { LeadStatus } from "@/generated/prisma/client"
 import {
-  isServiceLeadStatus,
-  updateServiceLeadStatus,
-} from "@/server/mutations/service-lead-mutation"
+  getRequestContextMeta,
+  getRouteParams,
+  handleApiError,
+  ok,
+  parseJsonBody,
+  type RouteContext,
+} from "@/lib/api/response"
+import { updateServiceLeadSchema } from "@/lib/api/schemas"
+import { getAuthContext } from "@/lib/security/auth-context"
+import { requirePermission } from "@/lib/security/authorization"
+import { safeAuditLog } from "@/lib/security/audit"
+import { updateServiceLeadStatus } from "@/server/mutations/service-lead-mutation"
 
 export async function PUT(request: Request, context: RouteContext<{ id: string }>) {
-  try {
-    const { id } = await getRouteParams(context)
-    const body = await readJson<{ status?: LeadStatus | string }>(request)
+  const requestMeta = getRequestContextMeta(request)
+  const auth = getAuthContext(request)
 
-    if (!isServiceLeadStatus(body.status)) {
-      return fail("validation_error", "不支持的线索状态", 422)
-    }
+  try {
+    requirePermission(auth, "service-lead:update")
+    const { id } = await getRouteParams(context)
+    const body = await parseJsonBody(request, updateServiceLeadSchema)
 
     const lead = await updateServiceLeadStatus(id, body.status)
 
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "SERVICE_LEAD",
+      action: "UPDATE_SERVICE_LEAD_STATUS",
+      resourceType: "ServiceLead",
+      resourceId: id,
+      result: "SUCCESS",
+      metadata: { status: body.status },
+    })
+
     return ok({ lead })
   } catch (error) {
-    return fail("service_lead_update_failed", error instanceof Error ? error.message : "线索更新失败", 500)
+    await safeAuditLog({
+      auth,
+      request: requestMeta,
+      purpose: "SERVICE_LEAD",
+      action: "UPDATE_SERVICE_LEAD_STATUS",
+      resourceType: "ServiceLead",
+      result: "FAILED",
+      metadata: { message: error instanceof Error ? error.message : "unknown" },
+    })
+
+    return handleApiError(error, "service_lead_update_failed", "线索更新失败")
   }
 }

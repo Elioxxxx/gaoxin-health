@@ -19,6 +19,10 @@ export async function runPreConsultAgent(input: {
         task: "pre-consult",
         schemaName: "PreConsultAgentOutput",
         input,
+        metadata: {
+          sessionId: input.sessionId,
+          agentName: "pre_consult_agent",
+        },
       })
 
       return {

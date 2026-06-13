@@ -431,6 +431,7 @@ model PreConsultSession {
   recommendations Recommendation[]
   guidePlans   GuidePlan[]
   agentRuns    AgentRun[]
+  aiInvocations AiInvocation[]
   feedback     AgentFeedback[]
   qualityIssues QualityIssue[]
   createdAt    DateTime            @default(now())
@@ -631,6 +632,31 @@ model AgentRun {
   @@index([status])
 }
 
+model AiInvocation {
+  id                String             @id @default(cuid())
+  sessionId         String?
+  provider          String
+  model             String
+  task              String
+  schemaName        String?
+  status            AgentRunStatus
+  latencyMs         Int
+  inputPreviewJson  String
+  outputPreviewJson String?
+  errorMessage      String?
+  promptVersion     String?
+  tokenUsageJson    String?
+  metadataJson      String?
+  session           PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  createdAt         DateTime           @default(now())
+
+  @@index([sessionId])
+  @@index([provider, model])
+  @@index([task])
+  @@index([status])
+  @@index([createdAt])
+}
+
 model AgentStep {
   id        String   @id @default(cuid())
   runId     String
@@ -643,6 +669,30 @@ model AgentStep {
   createdAt DateTime @default(now())
 
   @@index([runId])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  requestId    String?
+  traceId      String
+  actorId      String?
+  actorRole    String?
+  purpose      String
+  action       String
+  resourceType String
+  resourceId   String?
+  result       String
+  metadataJson String?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([traceId])
+  @@index([actorId])
+  @@index([actorRole])
+  @@index([resourceType, resourceId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model AgentFeedback {

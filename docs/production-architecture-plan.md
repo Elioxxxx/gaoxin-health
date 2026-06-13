@@ -12,13 +12,21 @@
 
 ## 2. 本轮已落地的地基
 
-本轮先落地不影响演示流程的代码边界：
+第一轮先落地不影响演示流程的代码边界：
 
 - `src/lib/config/runtime.ts`：统一读取运行环境、AI Provider、模型、数据源，并输出生产化配置检查。
 - `src/lib/ai/gateway.ts`：新增 AI Gateway，支持超时、脱敏、真实 Provider 失败后降级 Mock。
 - `src/lib/ai/provider.ts`：保留 Mock Provider，新增 OpenAI-Compatible Provider 骨架，可兼容 OpenAI、豆包/火山兼容接口、私有化模型网关。
 - `src/integration/*`：新增医疗数据接入 Gateway 与 Canonical 类型，当前默认用 Mock Connector，后续真实接口只接入这里。
 - `/admin/model-config`：展示当前 Provider、模型版本、数据源模式和生产化配置检查。
+
+P0 第一阶段已继续落地：
+
+- `AuditLog`：新增审计日志表，记录 requestId、traceId、操作者、业务目的、动作、资源、结果和脱敏元数据。
+- `AiInvocation`：新增模型调用元数据表，记录 provider、model、task、schema、状态、延迟、输入/输出预览和错误信息。
+- `src/lib/security/*`：新增 Mock AuthContext、权限检查、审计写入和隐私脱敏工具，为真实认证/授权替换预留接口。
+- `src/lib/api/schemas.ts`：新增关键写接口 zod schema。
+- 关键写接口已接入校验、权限和审计：预问诊创建、预问诊消息、预问诊运行、行为记录、意图分析、服务线索状态更新。
 
 ## 3. 推荐目标架构
 
