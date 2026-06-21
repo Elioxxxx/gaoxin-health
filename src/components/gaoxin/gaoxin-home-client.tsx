@@ -1,6 +1,3 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import {
   Activity,
   Baby,
@@ -28,29 +25,9 @@ import {
   WalletCards,
 } from "lucide-react"
 
-import { GaoxinAiAssistantCard } from "@/components/gaoxin/gaoxin-ai-assistant-card"
 import { GaoxinBanner } from "@/components/gaoxin/gaoxin-banner"
-import { GaoxinHealthCard } from "@/components/gaoxin/gaoxin-health-card"
 import { GaoxinQuickActions } from "@/components/gaoxin/gaoxin-quick-actions"
 import { GaoxinServiceSection } from "@/components/gaoxin/gaoxin-service-section"
-
-type Institution = {
-  type: "TERTIARY_HOSPITAL" | "COMMUNITY_HEALTH_CENTER" | string
-}
-
-type Doctor = {
-  isExpert: boolean
-}
-
-type ApiData<T> = {
-  data: T
-}
-
-const fallbackResourceStats = {
-  tertiaryCount: 5,
-  communityCount: 11,
-  expertCount: 6,
-}
 
 const outpatientServices = [
   { label: "预约挂号", href: "/gaoxin/resources", icon: CalendarCheck, tone: "emerald" as const },
@@ -106,59 +83,10 @@ const headlines = [
 ]
 
 export function GaoxinHomeClient() {
-  const [resourceStats, setResourceStats] = useState<{
-    tertiaryCount?: number
-    communityCount?: number
-    expertCount?: number
-  }>(fallbackResourceStats)
-
-  useEffect(() => {
-    let ignore = false
-
-    async function loadStats() {
-      try {
-        const [institutionPayload, doctorPayload] = await Promise.all([
-          fetch("/api/resources/institutions").then((response) => response.json()) as Promise<
-            ApiData<Institution[]>
-          >,
-          fetch("/api/resources/doctors").then((response) => response.json()) as Promise<
-            ApiData<Doctor[]>
-          >,
-        ])
-
-        if (ignore) {
-          return
-        }
-
-        setResourceStats({
-          tertiaryCount: institutionPayload.data.filter(
-            (item) => item.type === "TERTIARY_HOSPITAL"
-          ).length,
-          communityCount: institutionPayload.data.filter(
-            (item) => item.type === "COMMUNITY_HEALTH_CENTER"
-          ).length,
-          expertCount: doctorPayload.data.filter((item) => item.isExpert).length,
-        })
-      } catch {
-        if (!ignore) {
-          setResourceStats(fallbackResourceStats)
-        }
-      }
-    }
-
-    void loadStats()
-
-    return () => {
-      ignore = true
-    }
-  }, [])
-
   return (
     <div className="space-y-3 pb-2">
       <GaoxinBanner />
       <GaoxinQuickActions />
-      <GaoxinHealthCard />
-      <GaoxinAiAssistantCard {...resourceStats} />
       <GaoxinServiceSection title="门诊服务" items={outpatientServices} />
       <GaoxinServiceSection title="家医服务" items={familyDoctorServices} />
       <GaoxinServiceSection title="AI健康服务" items={aiHealthServices} highlight badge="新增" />
