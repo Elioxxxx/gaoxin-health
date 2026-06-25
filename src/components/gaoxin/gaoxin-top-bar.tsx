@@ -12,6 +12,7 @@ const routeTitles: Array<{ prefix: string; title: string }> = [
   { prefix: "/gaoxin/report-ai", title: "报告解读" },
   { prefix: "/gaoxin/health-management", title: "健康管理" },
   { prefix: "/gaoxin/records", title: "我的记录" },
+  { prefix: "/gaoxin/videos", title: "健康推荐" },
 ]
 
 export function GaoxinTopBar({ title }: { title?: string }) {

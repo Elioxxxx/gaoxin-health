@@ -117,6 +117,53 @@ enum UserActionEventType {
   HEALTH_RECORD_VIEW
 }
 
+enum VideoSourceType {
+  EXTERNAL_URL
+  UPLOAD
+}
+
+enum VideoPublishStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum VideoAudienceMatchMode {
+  NONE
+  ALL
+  ANY
+  EXCLUDE
+}
+
+enum VideoOrientation {
+  AUTO
+  PORTRAIT
+  LANDSCAPE
+}
+
+enum VideoInteractionType {
+  LIKE
+  FAVORITE
+}
+
+enum VideoPlaybackEventType {
+  IMPRESSION
+  CLICK
+  PLAY
+  PAUSE
+  PROGRESS
+  COMPLETE
+  SPEED_CHANGE
+  SHARE
+}
+
+enum VideoCommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum RiskFocusCategory {
   ACUTE_RISK
   CHRONIC_CONTROL
@@ -143,34 +190,38 @@ model User {
 }
 
 model ResidentProfile {
-  id               String              @id @default(cuid())
-  userId           String              @unique
-  name             String
-  gender           String
-  age              Int
-  phone            String
-  address          String
-  community        String
-  familyDoctorName String?
-  caseKey          String?
-  caseSummary      String?
-  primaryScenario  String?
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  healthTags       HealthTag[]
-  medicalRecords   MedicalRecord[]
-  diagnoses        Diagnosis[]
-  medications      Medication[]
-  labResults       LabResult[]
-  allergies        Allergy[]
-  healthSummaries  HealthSummary[]
-  healthTasks      HealthTask[]
-  sessions         PreConsultSession[]
-  doctorProfiles   DoctorHealthProfile[]
-  userActionEvents UserActionEvent[]
-  intentInsights   IntentInsight[]
-  serviceLeads     ServiceLead[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id                      String                   @id @default(cuid())
+  userId                  String                   @unique
+  name                    String
+  gender                  String
+  age                     Int
+  phone                   String
+  address                 String
+  community               String
+  familyDoctorName        String?
+  caseKey                 String?
+  caseSummary             String?
+  primaryScenario         String?
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthTags              HealthTag[]
+  medicalRecords          MedicalRecord[]
+  diagnoses               Diagnosis[]
+  medications             Medication[]
+  labResults              LabResult[]
+  allergies               Allergy[]
+  healthSummaries         HealthSummary[]
+  healthTasks             HealthTask[]
+  sessions                PreConsultSession[]
+  doctorProfiles          DoctorHealthProfile[]
+  userActionEvents        UserActionEvent[]
+  videoInteractions       VideoInteraction[]
+  videoComments           VideoComment[]
+  videoEvents             VideoPlaybackEvent[]
+  videoRecommendationLogs VideoRecommendationLog[]
+  intentInsights          IntentInsight[]
+  serviceLeads            ServiceLead[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
 
   @@index([name])
   @@index([community])
@@ -330,59 +381,59 @@ model HealthTask {
 }
 
 model Institution {
-  id                  String              @id @default(cuid())
-  name                String              @unique
-  type                InstitutionType
-  level               String
-  address             String
-  description         String
-  capabilities        String
-  departments         Department[]
-  doctors             Doctor[]
-  serviceCapabilities ServiceCapability[]
-  recommendations     Recommendation[]
+  id                   String              @id @default(cuid())
+  name                 String              @unique
+  type                 InstitutionType
+  level                String
+  address              String
+  description          String
+  capabilities         String
+  departments          Department[]
+  doctors              Doctor[]
+  serviceCapabilities  ServiceCapability[]
+  recommendations      Recommendation[]
   receivedServiceLeads ServiceLead[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@index([type])
 }
 
 model Department {
-  id              String              @id @default(cuid())
-  institutionId   String
-  name            String
-  description     String
-  symptomKeywords String
-  diseaseKeywords String
-  institution     Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  doctors         Doctor[]
-  capabilities    ServiceCapability[]
-  recommendations Recommendation[]
+  id                   String              @id @default(cuid())
+  institutionId        String
+  name                 String
+  description          String
+  symptomKeywords      String
+  diseaseKeywords      String
+  institution          Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  doctors              Doctor[]
+  capabilities         ServiceCapability[]
+  recommendations      Recommendation[]
   receivedServiceLeads ServiceLead[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@unique([institutionId, name])
   @@index([name])
 }
 
 model Doctor {
-  id             String           @id @default(cuid())
-  institutionId  String
-  departmentId   String
-  name           String
-  title          String
-  specialties    String
-  isExpert       Boolean          @default(false)
-  introduction   String
-  institution    Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  department     Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  expertPool     ExpertPool?
-  profile        DoctorProfile?
+  id              String           @id @default(cuid())
+  institutionId   String
+  departmentId    String
+  name            String
+  title           String
+  specialties     String
+  isExpert        Boolean          @default(false)
+  introduction    String
+  institution     Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  department      Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  expertPool      ExpertPool?
+  profile         DoctorProfile?
   recommendations Recommendation[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@index([institutionId])
   @@index([departmentId])
@@ -402,40 +453,40 @@ model ExpertPool {
 }
 
 model ServiceCapability {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   institutionId String
   departmentId  String?
   name          String
   category      String
   description   String
   keywords      String
-  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  department    Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([institutionId])
   @@index([departmentId])
 }
 
 model PreConsultSession {
-  id           String              @id @default(cuid())
-  residentId   String
-  status       SessionStatus
-  initialInput String
-  scenarioKey  String
-  resident     ResidentProfile     @relation(fields: [residentId], references: [id], onDelete: Cascade)
-  messages     PreConsultMessage[]
-  report       PreConsultReport?
-  triageResult TriageResult?
+  id              String              @id @default(cuid())
+  residentId      String
+  status          SessionStatus
+  initialInput    String
+  scenarioKey     String
+  resident        ResidentProfile     @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  messages        PreConsultMessage[]
+  report          PreConsultReport?
+  triageResult    TriageResult?
   recommendations Recommendation[]
-  guidePlans   GuidePlan[]
-  agentRuns    AgentRun[]
-  aiInvocations AiInvocation[]
-  feedback     AgentFeedback[]
-  qualityIssues QualityIssue[]
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  guidePlans      GuidePlan[]
+  agentRuns       AgentRun[]
+  aiInvocations   AiInvocation[]
+  feedback        AgentFeedback[]
+  qualityIssues   QualityIssue[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
   @@index([residentId])
   @@index([status])
@@ -455,20 +506,20 @@ model PreConsultMessage {
 }
 
 model PreConsultReport {
-  id                String            @id @default(cuid())
-  sessionId         String            @unique
-  chiefComplaint    String
-  presentIllness    String
-  pastHistory       String
-  medicationHistory String
-  allergyHistory    String
-  riskFlags         String
+  id                 String            @id @default(cuid())
+  sessionId          String            @unique
+  chiefComplaint     String
+  presentIllness     String
+  pastHistory        String
+  medicationHistory  String
+  allergyHistory     String
+  riskFlags          String
   patientExplanation String
-  doctorSummary     String
-  structuredJson    String
-  session           PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  doctorSummary      String
+  structuredJson     String
+  session            PreConsultSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 }
 
 model TriageResult {
@@ -567,15 +618,15 @@ model MatchingRule {
 }
 
 model KnowledgeDocument {
-  id          String           @id @default(cuid())
-  title       String
-  category    String
-  source      String
-  content     String
-  tags        String
-  chunks      KnowledgeChunk[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id        String           @id @default(cuid())
+  title     String
+  category  String
+  source    String
+  content   String
+  tags      String
+  chunks    KnowledgeChunk[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }
 
 model KnowledgeChunk {
@@ -591,41 +642,41 @@ model KnowledgeChunk {
 }
 
 model PromptTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  agentName String
+  version   String
+  template  String
+  variables String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModelVersion {
   id          String   @id @default(cuid())
-  name        String   @unique
-  agentName   String
+  provider    String
+  modelName   String
   version     String
-  template    String
-  variables   String
-  enabled     Boolean  @default(true)
+  configJson  String
+  isActive    Boolean  @default(false)
+  description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model ModelVersion {
-  id           String   @id @default(cuid())
-  provider     String
-  modelName    String
-  version      String
-  configJson   String
-  isActive     Boolean  @default(false)
-  description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
 model AgentRun {
-  id        String            @id @default(cuid())
-  sessionId String?
-  agentName String
-  inputJson String
+  id         String             @id @default(cuid())
+  sessionId  String?
+  agentName  String
+  inputJson  String
   outputJson String
-  status    AgentRunStatus
-  latencyMs Int
-  session   PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  steps     AgentStep[]
-  feedback  AgentFeedback[]
-  createdAt DateTime          @default(now())
+  status     AgentRunStatus
+  latencyMs  Int
+  session    PreConsultSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  steps      AgentStep[]
+  feedback   AgentFeedback[]
+  createdAt  DateTime           @default(now())
 
   @@index([sessionId])
   @@index([agentName])
@@ -658,15 +709,15 @@ model AiInvocation {
 }
 
 model AgentStep {
-  id        String   @id @default(cuid())
-  runId     String
-  stepName  String
-  inputJson String
+  id         String         @id @default(cuid())
+  runId      String
+  stepName   String
+  inputJson  String
   outputJson String
-  status    AgentRunStatus
-  latencyMs Int
-  run       AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  status     AgentRunStatus
+  latencyMs  Int
+  run        AgentRun       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  createdAt  DateTime       @default(now())
 
   @@index([runId])
 }
@@ -792,6 +843,125 @@ model UserActionEvent {
   @@index([targetType, targetId])
 }
 
+model VideoTag {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  category  String
+  color     String?
+  videos    VideoContent[] @relation("VideoContentTags")
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([category])
+}
+
+model VideoContent {
+  id                 String                   @id @default(cuid())
+  title              String
+  summary            String
+  description        String
+  sourceName         String
+  sourceType         VideoSourceType          @default(EXTERNAL_URL)
+  videoUrl           String?
+  uploadPath         String?
+  coverImageUrl      String?
+  durationSeconds    Int
+  orientation        VideoOrientation         @default(AUTO)
+  status             VideoPublishStatus       @default(DRAFT)
+  audienceTags       String                   @default("[]")
+  audienceMatchMode  VideoAudienceMatchMode   @default(NONE)
+  isHomeRecommended  Boolean                  @default(true)
+  isPinned           Boolean                  @default(false)
+  priority           Int                      @default(50)
+  publishedAt        DateTime                 @default(now())
+  publishStartAt     DateTime?
+  publishEndAt       DateTime?
+  viewCount          Int                      @default(0)
+  completionCount    Int                      @default(0)
+  likeCount          Int                      @default(0)
+  favoriteCount      Int                      @default(0)
+  commentCount       Int                      @default(0)
+  tags               VideoTag[]               @relation("VideoContentTags")
+  interactions       VideoInteraction[]
+  comments           VideoComment[]
+  events             VideoPlaybackEvent[]
+  recommendationLogs VideoRecommendationLog[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  @@index([status, isHomeRecommended])
+  @@index([isPinned, priority])
+  @@index([publishedAt])
+}
+
+model VideoInteraction {
+  id         String               @id @default(cuid())
+  videoId    String
+  residentId String
+  type       VideoInteractionType
+  active     Boolean              @default(true)
+  video      VideoContent         @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  resident   ResidentProfile      @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@unique([videoId, residentId, type])
+  @@index([residentId, type, active])
+  @@index([videoId, type, active])
+}
+
+model VideoPlaybackEvent {
+  id              String                 @id @default(cuid())
+  videoId         String
+  residentId      String
+  eventType       VideoPlaybackEventType
+  progressSeconds Int?
+  playbackRate    Float?
+  metadataJson    String                 @default("{}")
+  occurredAt      DateTime               @default(now())
+  video           VideoContent           @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  resident        ResidentProfile        @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt       DateTime               @default(now())
+
+  @@index([videoId, eventType])
+  @@index([residentId, occurredAt])
+}
+
+model VideoComment {
+  id           String             @id @default(cuid())
+  videoId      String
+  residentId   String
+  content      String
+  status       VideoCommentStatus @default(PENDING)
+  reviewerName String?
+  reviewedAt   DateTime?
+  video        VideoContent       @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  resident     ResidentProfile    @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([videoId, status])
+  @@index([residentId, createdAt])
+}
+
+model VideoRecommendationLog {
+  id          String          @id @default(cuid())
+  videoId     String
+  residentId  String
+  eventName   String
+  pagePath    String?
+  matchedTags String          @default("[]")
+  score       Float           @default(0)
+  video       VideoContent    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  resident    ResidentProfile @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  occurredAt  DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+
+  @@index([videoId])
+  @@index([residentId, occurredAt])
+  @@index([eventName])
+}
+
 model IntentInsight {
   id                    String           @id @default(cuid())
   residentId            String
@@ -816,7 +986,7 @@ model IntentInsight {
 }
 
 model ServiceLead {
-  id                    String            @id @default(cuid())
+  id                    String           @id @default(cuid())
   residentId            String
   intentInsightId       String?
   receiverType          LeadReceiverType
@@ -827,14 +997,14 @@ model ServiceLead {
   summary               String
   suggestedAction       String
   priority              LeadPriority
-  status                LeadStatus        @default(PENDING)
-  resident              ResidentProfile   @relation(fields: [residentId], references: [id], onDelete: Cascade)
-  intentInsight         IntentInsight?     @relation(fields: [intentInsightId], references: [id], onDelete: SetNull)
-  receiverInstitution   Institution?      @relation(fields: [receiverInstitutionId], references: [id], onDelete: SetNull)
-  receiverDepartment    Department?       @relation(fields: [receiverDepartmentId], references: [id], onDelete: SetNull)
+  status                LeadStatus       @default(PENDING)
+  resident              ResidentProfile  @relation(fields: [residentId], references: [id], onDelete: Cascade)
+  intentInsight         IntentInsight?   @relation(fields: [intentInsightId], references: [id], onDelete: SetNull)
+  receiverInstitution   Institution?     @relation(fields: [receiverInstitutionId], references: [id], onDelete: SetNull)
+  receiverDepartment    Department?      @relation(fields: [receiverDepartmentId], references: [id], onDelete: SetNull)
   feedback              LeadFeedback[]
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   @@index([residentId])
   @@index([intentInsightId])

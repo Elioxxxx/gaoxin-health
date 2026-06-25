@@ -1,6 +1,12 @@
 import { prisma } from "./shared"
 
 export async function resetDatabase() {
+  await prisma.videoRecommendationLog.deleteMany()
+  await prisma.videoPlaybackEvent.deleteMany()
+  await prisma.videoComment.deleteMany()
+  await prisma.videoInteraction.deleteMany()
+  await prisma.videoContent.deleteMany()
+  await prisma.videoTag.deleteMany()
   await prisma.leadFeedback.deleteMany()
   await prisma.serviceLead.deleteMany()
   await prisma.intentInsight.deleteMany()

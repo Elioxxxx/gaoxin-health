@@ -7,6 +7,7 @@ import { resetDatabase } from "./seed/reset"
 import { seedResidents, seedResidentHealthData } from "./seed/residents"
 import { seedRulesAndKnowledge } from "./seed/rules-knowledge"
 import { prisma } from "./seed/shared"
+import { seedVideos } from "./seed/videos"
 
 async function main() {
   await resetDatabase()
@@ -17,6 +18,7 @@ async function main() {
   await seedResidentHealthData(residents)
   await seedOperationalDemoData(residents, institutions, departments)
   await seedRulesAndKnowledge()
+  await seedVideos()
   await seedSessions(residents, institutions, departments, doctors)
 
   console.log("Seed 完成：已写入高新区 Mock 医疗资源、居民健康档案、规则、知识库与 Agent 日志。")

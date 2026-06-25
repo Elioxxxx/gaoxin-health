@@ -28,6 +28,8 @@ import {
 import { GaoxinBanner } from "@/components/gaoxin/gaoxin-banner"
 import { GaoxinQuickActions } from "@/components/gaoxin/gaoxin-quick-actions"
 import { GaoxinServiceSection } from "@/components/gaoxin/gaoxin-service-section"
+import { GaoxinVideoRecommendations } from "@/components/gaoxin/gaoxin-video-recommendations"
+import { getHomeVideoRecommendations } from "@/server/queries/video-query"
 
 const outpatientServices = [
   { label: "预约挂号", href: "/gaoxin/resources", icon: CalendarCheck, tone: "emerald" as const },
@@ -82,10 +84,13 @@ const headlines = [
   "体检血糖偏高，建议建立健康管理任务",
 ]
 
-export function GaoxinHomeClient() {
+export async function GaoxinHomeClient() {
+  const videos = await getHomeVideoRecommendations(3)
+
   return (
     <div className="space-y-3 pb-2">
       <GaoxinBanner />
+      <GaoxinVideoRecommendations videos={videos} />
       <GaoxinQuickActions />
       <GaoxinServiceSection title="门诊服务" items={outpatientServices} />
       <GaoxinServiceSection title="家医服务" items={familyDoctorServices} />

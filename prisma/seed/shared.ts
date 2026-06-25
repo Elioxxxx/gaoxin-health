@@ -18,6 +18,13 @@ export {
   SessionStatus,
   TriageLevel,
   UserActionEventType,
+  VideoAudienceMatchMode,
+  VideoCommentStatus,
+  VideoInteractionType,
+  VideoOrientation,
+  VideoPlaybackEventType,
+  VideoPublishStatus,
+  VideoSourceType,
 } from "../../src/generated/prisma/client"
 
 const adapter = new PrismaBetterSqlite3({

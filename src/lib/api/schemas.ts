@@ -3,6 +3,13 @@ import {
   LeadStatus,
   TriageLevel,
   UserActionEventType,
+  VideoAudienceMatchMode,
+  VideoCommentStatus,
+  VideoInteractionType,
+  VideoOrientation,
+  VideoPlaybackEventType,
+  VideoPublishStatus,
+  VideoSourceType,
 } from "@/generated/prisma/client"
 import { z } from "zod"
 
@@ -111,6 +118,68 @@ export const knowledgeDocumentCreateSchema = z.object({
 export const knowledgeDocumentUpdateSchema = knowledgeDocumentCreateSchema
   .partial()
   .refine((value) => Object.keys(value).length > 0, "至少需要提供一个要更新的字段")
+
+const optionalDateText = z.string().trim().max(80).optional()
+const mediaUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (value) =>
+      value.length === 0 ||
+      value.startsWith("https://") ||
+      value.startsWith("http://") ||
+      value.startsWith("/"),
+    "媒体地址必须是 http(s) 外链或站内路径"
+  )
+  .optional()
+
+export const videoContentCreateSchema = z.object({
+  title: shortText,
+  summary: z.string().trim().min(1).max(300),
+  description: z.string().trim().max(2000).optional(),
+  sourceName: z.string().trim().min(1).max(120).optional(),
+  sourceType: z.enum(VideoSourceType).optional(),
+  videoUrl: mediaUrl,
+  uploadPath: mediaUrl,
+  coverImageUrl: mediaUrl,
+  durationSeconds: z.coerce.number().int().min(1).max(24 * 60 * 60),
+  orientation: z.enum(VideoOrientation).optional(),
+  status: z.enum(VideoPublishStatus).optional(),
+  audienceTags: optionalJson,
+  audienceMatchMode: z.enum(VideoAudienceMatchMode).optional(),
+  isHomeRecommended: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
+  priority: z.coerce.number().int().min(0).max(1000).optional(),
+  publishedAt: optionalDateText,
+  publishStartAt: optionalDateText,
+  publishEndAt: optionalDateText,
+  tags: optionalJson,
+})
+
+export const videoContentUpdateSchema = videoContentCreateSchema
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, "至少需要提供一个要更新的字段")
+
+export const videoInteractionSchema = z.object({
+  type: z.enum(VideoInteractionType),
+})
+
+export const videoPlaybackEventSchema = z.object({
+  eventType: z.enum(VideoPlaybackEventType),
+  progressSeconds: z.coerce.number().int().min(0).optional(),
+  playbackRate: z.coerce.number().min(0.25).max(3).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})
+
+export const videoCommentCreateSchema = z.object({
+  content: z.string().trim().min(1).max(500),
+})
+
+export const videoCommentReviewSchema = z.object({
+  status: z.enum(VideoCommentStatus),
+  reviewerName: z.string().trim().min(1).max(80).optional(),
+})
 
 export const qualityIssueUpdateSchema = z.object({
   status: z.enum(["OPEN", "REVIEWING", "RESOLVED"]),

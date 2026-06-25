@@ -11,6 +11,7 @@ import {
   Settings2,
   Stethoscope,
   UserRoundCog,
+  Video,
 } from "lucide-react"
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/admin/doctors", label: "医生管理", icon: UserRoundCog },
   { href: "/admin/rules", label: "分诊规则", icon: GitBranch },
   { href: "/admin/knowledge", label: "知识库", icon: Database },
+  { href: "/admin/videos", label: "视频推荐", icon: Video },
   { href: "/admin/agent-runs", label: "Agent 日志", icon: Bot },
   { href: "/admin/intent-insights", label: "意图洞察", icon: Lightbulb },
   { href: "/admin/quality", label: "质量反馈", icon: MessageCircleWarning },

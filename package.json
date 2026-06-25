@@ -27,6 +27,7 @@
     "patient-demo-check": "tsx scripts/patient-demo-check.ts",
     "intent-demo-check": "tsx scripts/intent-demo-check.ts",
     "operational-demo-check": "tsx scripts/operational-demo-check.ts",
+    "video-recommendation-check": "tsx scripts/video-recommendation-check.ts",
     "production-readiness": "tsx scripts/production-readiness-check.ts"
   },
   "dependencies": {
