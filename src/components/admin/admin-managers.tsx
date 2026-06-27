@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { parseJsonArray } from "@/lib/json"
+import { getSupportedVideoFormat } from "@/lib/videos/video-format"
 
 type Institution = {
   id: string
@@ -761,6 +762,7 @@ function VideoFormDialog({
   const [uploadPath, setUploadPath] = useState(String(values.uploadPath ?? ""))
   const [coverImageUrl, setCoverImageUrl] = useState(String(values.coverImageUrl ?? ""))
   const [durationSeconds, setDurationSeconds] = useState(Number(values.durationSeconds ?? 1))
+  const [videoOrientation, setVideoOrientation] = useState(String(values.orientation ?? "PORTRAIT"))
   const [coverFrameMode, setCoverFrameMode] = useState<CoverFrameMode>("LAST")
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null)
   const [uploadStatus, setUploadStatus] = useState("")
@@ -795,7 +797,7 @@ function VideoFormDialog({
       uploadPath: sourceType === "UPLOAD" ? uploadPath : "",
       coverImageUrl,
       durationSeconds: String(Math.max(1, Math.round(durationSeconds || 1))),
-      orientation: "PORTRAIT",
+      orientation: videoOrientation,
       status: String(formData.get("status") ?? "PENDING_REVIEW"),
       tags: parseListInput(String(formData.get("tags") ?? "")),
       audienceTags: Array.from(new Set([...selectedAudienceTags, ...customTargetTags])),
@@ -839,9 +841,10 @@ function VideoFormDialog({
       }
 
       const metadata = await readLocalVideoMetadata(file)
+      const videoFormat = getSupportedVideoFormat(metadata.width, metadata.height)
 
-      if (!isNineBySixteenPortrait(metadata.width, metadata.height)) {
-        throw new Error(`当前只能接受 9:16 竖屏视频，当前视频为 ${metadata.width}×${metadata.height}`)
+      if (!videoFormat) {
+        throw new Error(`当前仅支持 9:16 竖屏或 16:9 横屏 mp4 视频，当前视频为 ${metadata.width}×${metadata.height}`)
       }
 
       setUploadStatus(frameMode === "LAST" ? "正在读取视频最后一帧..." : "正在读取视频第一帧...")
@@ -866,8 +869,9 @@ function VideoFormDialog({
       setUploadPath(payload.data.uploadPath)
       setCoverImageUrl(payload.data.coverImageUrl)
       setDurationSeconds(metadata.duration)
+      setVideoOrientation(videoFormat.orientation)
       setSourceType("UPLOAD")
-      setUploadStatus(`上传完成：${metadata.width}×${metadata.height}，${formatSeconds(metadata.duration)}`)
+      setUploadStatus(`上传完成：${metadata.width}×${metadata.height}，${videoFormat.label}，${formatSeconds(metadata.duration)}`)
     } catch (uploadError) {
       setUploadStatus("")
       setError(uploadError instanceof Error ? uploadError.message : "视频上传失败，请重新选择文件")
@@ -927,7 +931,7 @@ function VideoFormDialog({
                   <option value="UPLOAD">上传文件</option>
                 </select>
               </label>
-              <p className="text-xs leading-5 text-slate-400">当前只能接受 9:16 竖屏 mp4 视频；时长和视频规格由系统自动读取。</p>
+              <p className="text-xs leading-5 text-slate-400">当前支持 9:16 竖屏和 16:9 横屏 mp4 视频；时长和视频规格由系统自动读取。</p>
               {sourceType === "EXTERNAL_URL" ? (
                 <label className="grid gap-1 text-sm">
                   <span className="font-medium text-slate-700">外链地址</span>
@@ -952,7 +956,10 @@ function VideoFormDialog({
                   </label>
                   {coverImageUrl ? (
                     <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                      <div className="aspect-[9/16] max-h-52 bg-cover bg-center" style={{ backgroundImage: `url("${escapeCssUrl(coverImageUrl)}")` }} />
+                      <div
+                        className={`${videoOrientation === "LANDSCAPE" ? "aspect-video" : "aspect-[9/16]"} max-h-52 bg-cover bg-center`}
+                        style={{ backgroundImage: `url("${escapeCssUrl(coverImageUrl)}")` }}
+                      />
                       <p className="truncate px-3 py-2 text-xs text-slate-500">{uploadPath || "封面已生成"}</p>
                     </div>
                   ) : null}
@@ -963,7 +970,7 @@ function VideoFormDialog({
               <input type="hidden" name="uploadPath" value={uploadPath} />
               <input type="hidden" name="coverImageUrl" value={coverImageUrl} />
               <input type="hidden" name="durationSeconds" value={Math.max(1, Math.round(durationSeconds || 1))} />
-              <input type="hidden" name="orientation" value="PORTRAIT" />
+              <input type="hidden" name="orientation" value={videoOrientation} />
             </VideoFormSection>
 
             <VideoFormSection title="标签投放">
@@ -1240,14 +1247,6 @@ function captureVideoFrame(file: File, frameMode: CoverFrameMode, duration: numb
     }
     video.src = url
   })
-}
-
-function isNineBySixteenPortrait(width: number, height: number) {
-  if (width <= 0 || height <= 0 || width >= height) {
-    return false
-  }
-
-  return Math.abs(width / height - 9 / 16) <= 0.03
 }
 
 function formatSeconds(seconds: number) {
