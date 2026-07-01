@@ -15,8 +15,8 @@ const navItems = [
   { href: "/doctor", label: "工作台", icon: LayoutDashboard },
   { href: "/doctor/schedule", label: "今日接诊", icon: CalendarDays },
   { href: "/doctor/service-leads", label: "服务线索", icon: UsersRound },
-  { href: "/doctor", label: "患者报告", icon: ClipboardList },
-  { href: "/doctor", label: "反馈记录", icon: MessageSquareText },
+  { href: "/doctor/reports", label: "患者报告", icon: ClipboardList },
+  { href: "/doctor/feedback", label: "反馈记录", icon: MessageSquareText },
 ]
 
 export function DoctorSidebar() {

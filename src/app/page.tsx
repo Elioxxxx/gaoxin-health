@@ -69,8 +69,8 @@ export default function Home() {
             const Icon = portal.icon;
 
             return (
-              <Card key={portal.href} className="border-slate-200">
-                <CardHeader>
+              <Card key={portal.href} className="h-full border-slate-200">
+                <CardHeader className="flex-1">
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex size-10 items-center justify-center rounded-md bg-sky-100 text-sky-700">
                       <Icon className="size-5" />
@@ -82,7 +82,7 @@ export default function Home() {
                     {portal.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <Link
                     href={portal.href}
                     className={buttonVariants({ className: "w-full" })}

@@ -56,8 +56,11 @@ export function DoctorHealthProfilePanel({
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2">
-          {checklist.map((item) => (
-            <label key={item} className="flex items-start gap-2 rounded-md bg-slate-50 p-3 text-sm text-slate-700">
+          {checklist.map((item, index) => (
+            <label
+              key={`checklist-${index}-${item}`}
+              className="flex items-start gap-2 rounded-md bg-slate-50 p-3 text-sm text-slate-700"
+            >
               <input type="checkbox" className="mt-1" readOnly />
               <span>{item}</span>
             </label>
@@ -79,8 +82,11 @@ function ListCard({ title, items }: { title: string; items: string[] }) {
       <CardContent>
         {items.length > 0 ? (
           <ul className="space-y-2">
-            {items.map((item) => (
-              <li key={item} className="rounded-md bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
+            {items.map((item, index) => (
+              <li
+                key={`${title}-${index}-${item}`}
+                className="rounded-md bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700"
+              >
                 {item}
               </li>
             ))}

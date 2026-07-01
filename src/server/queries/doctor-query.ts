@@ -115,6 +115,56 @@ export function getDoctorScheduleSessions() {
   })
 }
 
+export function getDoctorReportSessions() {
+  return prisma.preConsultSession.findMany({
+    orderBy: { updatedAt: "desc" },
+    include: {
+      resident: {
+        include: {
+          healthTags: true,
+          doctorProfiles: { orderBy: { generatedAt: "desc" }, take: 1 },
+        },
+      },
+      report: true,
+      triageResult: true,
+      recommendations: {
+        orderBy: { rank: "asc" },
+        include: {
+          institution: true,
+          department: true,
+          doctor: true,
+        },
+      },
+      feedback: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+  })
+}
+
+export function getDoctorFeedbackRecords() {
+  return prisma.agentFeedback.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      issues: true,
+      run: true,
+      session: {
+        include: {
+          resident: true,
+          report: true,
+          triageResult: true,
+          recommendations: {
+            orderBy: { rank: "asc" },
+            include: {
+              institution: true,
+              department: true,
+              doctor: true,
+            },
+          },
+        },
+      },
+    },
+  })
+}
+
 export function listDoctorServiceLeads(filters: ServiceLeadFilters = {}) {
   return prisma.serviceLead.findMany({
     where: {
